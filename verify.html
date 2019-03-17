@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title></title>
+	<style type="text/css">
+		div{
+			display: flex;
+			align-items: center;
+		}
+		#num{
+			padding-left: 10px;
+			height: 30px;
+			box-sizing: border-box;
+		}
+		#verify{
+			margin: 0;
+			padding: 0;
+			width: 85px;
+			height: 30px;
+			border: 1px #000 solid;
+			box-sizing: border-box;
+		}
+	</style>
+</head>
+<body>
+	<div id="verify-out">
+		<input type="text" id="num">
+		<img src="" id="verify">
+		<!-- <canvas id="verify"></canvas> -->
+	</div>
+	<button id="isTrue">验证</button>
+	<p id="result"></p>
+	<!-- ie9-不支持 -->
+	<script type="text/javascript">
+		setVerify();
+		
+		var btn = document.getElementById('isTrue');
+		btn.onclick = isTrue;
+
+		var verify = document.getElementById('verify');
+		verify.onclick = setVerify;
+		// 判断输入的数字是否正确
+		function isTrue() {
+			var verify = document.getElementById('verify').getAttribute('value');
+			var ipt = document.getElementById('num').value;
+			var result = document.getElementById('result');
+			var resultTemp = '';
+			switch(verify.length) {
+				case 9:
+					resultTemp += (verify.charCodeAt(7)-97);
+				case 6:
+					resultTemp = verify.charCodeAt(4)-97 + resultTemp;
+				case 3:
+					resultTemp = verify.charCodeAt(1)-97 + resultTemp;
+			}	
+			(resultTemp === ipt) ? result.innerHTML = '正确' : (result.innerHTML = '错误', setVerify());
+		}
+		// 产生随机加减验证码
+		function setVerify() {
+			// const verify = document.getElementById('verify');
+			var verify = document.createElement('canvas');
+			var ctx = verify.getContext('2d');
+			var width = verify.width;
+			var height = verify.height;
+			// 产生最多19条最少10条随机长度、位置、颜色的线
+			for (var i = 0; i < randomNum(10, 10); i++) {
+				ctx.beginPath();
+				ctx.moveTo(randomNum(width), randomNum(height));
+				ctx.lineTo(randomNum(width), randomNum(height));
+				ctx.lineWidth = 3;
+				ctx.strokeStyle = randomColor();
+				ctx.stroke();
+			}
+			// 生成5000~9999个直径为2px，随机位置的圆
+			for (var i = 0; i < randomNum(5000, 5000); i++) {
+				ctx.beginPath();
+				// x, y , r, 起始角度, 结束角度
+				ctx.arc(randomNum(width), randomNum(height), 1, 0, 2*Math.PI);
+				ctx.fillStyle = randomColor();
+				ctx.fill();
+			}
+
+			var num1 = randomNum(90, 10);
+			var num2 = randomNum(9, 1);
+			var arithmetics = ['+', '-'];
+			var arithmetic = arithmetics[randomNum(arithmetics.length)];
+			ctx.font="70px bolder sans-serif";
+			// 旋转画布，旋转角度为-7~15的随机数
+			ctx.rotate(randomNum(15, randomNum(-7))*Math.PI/180);
+			ctx.fillStyle = '#000';
+			ctx.fillText(num1 + arithmetic + num2, width/5, height/3 * 2);
+			var tempResult;
+			switch(arithmetic) {
+				case '+':
+					tempResult = num1 + num2;
+					break;
+				case '-':
+					tempResult = num1 - num2;
+					break;
+			}
+
+			var img = canvasToImg(verify);
+			var verifyImg = document.getElementById('verify');
+			verifyImg.setAttribute('src', img.src);
+			verifyImg.setAttribute('value', setCipher(tempResult));
+		}
+		// canvas转换成img
+		function canvasToImg(canvas) {
+			var image = new Image();
+			image.src = canvas.toDataURL("image/png");
+			return image;
+		}
+		// 简单加密验证码答案，防爬虫(大概？(又不挂网上，防啥爬虫))
+		function setCipher(num) {
+			num = Number(num);
+			if (num < 10) {
+				return String.fromCharCode(randomNum(10, 97), num+97,randomNum(10, 97));
+			} else if (num > 10 && num < 100) {
+				return String.fromCharCode(randomNum(10, 97), num/10+97,randomNum(10, 97),
+						randomNum(10, 97),num%10+97,randomNum(10, 97));
+			} else if (num > 100 && num < 1000) {
+				return String.fromCharCode(randomNum(10, 97), num/100+97,randomNum(10, 97),
+						randomNum(10, 97),num%100/10+97,randomNum(10, 97),
+						randomNum(10, 97),num%10+97,randomNum(10, 97));
+			}
+		}
+		// 返回一个随机整数
+		// 该整数最小不小于min，最大不大于等于max+min
+		// 调用时如只使用一个参数，则第二个参数默认为0
+		function randomNum(max, min) {
+			return Math.floor(Math.random() * max + 
+				((arguments.length === 1) ? 0 : min));
+		}
+		// 生成随机颜色
+		function randomColor(){
+			return 'rgb(' + randomNum(255, 0) + ', ' +
+				randomNum(255, 0) + ', ' + randomNum(255, 0);
+		}
+	</script>
+</body>
+</html>
