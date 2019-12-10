@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    #imgBox {
+      width: 400px;
+      height: 400px;
+      background: #000;
+      line-height: 400px;
+      color: #fff;
+      text-align: center;
+    }
+
+    #bgImg {
+      position: absolute;
+      left: 0;
+      top: 0;
+      z-index: 1;
+      opacity: 0.5;
+    }
+
+    #clipImg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 10;
+      color: #fff;
+      /* opacity: 0; */
+      /* clip-path: inset(100px 50px); */
+    }
+
+    /* #clipImg.on {} */
+
+    #choose {
+      display: none;
+    }
+
+    #showBox {
+      width: 300px;
+      height: 300px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #show {
+      position: absolute;
+      top: 0;
+      left: 0;
+      /* width: 300px; */
+      /* height: 300px; */
+    }
+  </style>
+</head>
+
+<body>
+  <input type="file" name="" id="choose" accept="image/*">
+  <div id="imgBox" title="选择图片">
+    <span id="tip">选择图片</span>
+    <img id="clipImg" />
+    <img id="bgImg">
+  </div>
+  <div id="showBox">
+    <img id="show" />
+  </div>
+  <script>
+    const choose = document.querySelector('#choose');
+    const imgBox = document.querySelector('#imgBox');
+    const clipImg = document.querySelector('#clipImg');
+    const bgImg = document.querySelector('#bgImg');
+    const showBox = document.querySelector('#showBox');
+    const show = document.querySelector('#show');
+
+    const imgBoxWidth = imgBox.clientWidth;
+    const imgBoxHeight = imgBox.clientHeight;
+    const rectLength = 150;
+    let imgWidth, imgHeight;
+
+    const showImg = ({ time, sx, sy } = {}) => {
+      // const canvas = document.createElement('canvas');
+      // const ctx = canvas.getContext('2d');
+      // canvas.style.width = `${rectLength}px`;
+      // canvas.style.height = `${rectLength}px`;
+
+      const ratio = window.devicePixelRatio || 1;
+
+      // const nowRectLength = rectLength * ratio;
+      // canvas.width = nowRectLength;
+      // canvas.height = nowRectLength;
+
+      // ctx.drawImage(
+      //   clipImg,
+      //   sx * time,
+      //   sy * time,
+      //   rectLength * time,
+      //   rectLength * time,
+      //   0,
+      //   0,
+      //   nowRectLength,
+      //   nowRectLength
+      // );
+
+      // show.src = canvas.toDataURL("image/png");
+
+      show.style.top = `-${sy * (showBox.clientHeight / rectLength)}px`
+      show.style.left = `-${sx * (showBox.clientWidth / rectLength)}px`
+    }
+
+    const changeImg = (url) => {
+      const img = new Image();
+      img.src = url;
+      img.onload = () => {
+        console.log(img);
+        // 放大倍率
+        const isWidthLongerHeight = img.width > img.height ? true : false;
+        const time = (isWidthLongerHeight ? img.width : img.height) / imgBoxWidth;
+        isWidthLongerHeight ? img.style.width = `${imgBoxWidth}px` : img.style.height = `${imgBoxHeight}px`;
+        imgWidth = img.width / time;
+        imgHeight = img.height / time;
+        clipImg.style = "";
+        bgImg.style = "";
+        clipImg.style.width = `${imgWidth}px`;
+        bgImg.style.width = `${imgWidth}px`;
+        show.style.width = `${imgWidth * (showBox.clientHeight / rectLength)}px`;
+
+        clipImg.style.height = `${imgHeight}px`;
+        bgImg.style.height = `${imgHeight}px`;
+        show.style.height = `${imgHeight * (showBox.clientWidth / rectLength)}px`;
+
+        isWidthLongerHeight ?
+          (
+            clipImg.style.top = `${(imgBoxHeight - imgHeight) / 2}px`,
+            clipImg.style.bottom = `${(imgBoxHeight - imgHeight) / 2}px`,
+            bgImg.style.top = `${(imgBoxHeight - imgHeight) / 2}px`,
+            bgImg.style.bottom = `${(imgBoxHeight - imgHeight) / 2}px`
+          ) :
+          (
+            clipImg.style.left = `${(imgBoxWidth - imgWidth) / 2}px`,
+            clipImg.style.right = `${(imgBoxWidth - imgWidth) / 2}px`,
+            bgImg.style.left = `${(imgBoxWidth - imgWidth) / 2}px`,
+            bgImg.style.right = `${(imgBoxWidth - imgWidth) / 2}px`
+          );
+
+        clipImg.src = url;
+        bgImg.src = url;
+        show.src = url;
+
+        clipImg.onload = () => {
+          clipImg.style.clipPath = `inset(0 ${
+            imgWidth > rectLength ? imgWidth - rectLength : 0
+            }px ${
+            imgHeight > rectLength ? imgHeight - rectLength : 0
+            }px 0)`;
+          showImg({ time, sx: 0, sy: 0 });
+          const tip = document.querySelector('#tip');
+          if (tip) {
+            imgBox.removeChild(tip)
+          }
+        }
+        imgBox.onmousemove = (event) => {
+          // console.log(event);
+          const id = event.target.getAttribute('id');
+          if (id === 'clipImg' || id === 'bgImg') {
+            const x = event.offsetX;
+            const y = event.offsetY;
+            // 当x<方块宽度一半时，方块维持宽度不变
+            // 当x<方块宽度一半>图片宽度时，方块维持宽度不变
+            // 当y<方块宽度一半时，方块维持宽度不变
+            // 当y+方块宽度一半>图片高度时，方块维持宽度不变
+            // 如果鼠标y坐标不在据图片顶部150内的位置，
+            // 则如果鼠标y坐标在据图片底部150内的位置，
+            const top = y > rectLength / 2 ? (y + rectLength / 2 < imgHeight ? y - rectLength / 2 : imgHeight - rectLength) : 0;
+            // const right = x + rectLength / 2 < imgWidth ? (x > rectLength / 2 ? imgWidth - rectLength : imgWidth - (x + rectLength / 2)) : 0;
+            const left = x > rectLength / 2 ? (x + rectLength / 2 < imgWidth ? x - rectLength / 2 : imgWidth - rectLength) : 0;
+
+            clipImg.style.clipPath = `inset(
+              ${top}px 
+              ${imgWidth - (left + rectLength)}px 
+              ${imgHeight - (top + rectLength)}px 
+              ${left}px)`;
+            showImg({
+              time,
+              sx: left,
+              sy: top
+            })
+          }
+
+        }
+      }
+
+    }
+
+    imgBox.onclick = () => {
+      choose.click();
+    }
+    choose.onchange = (event) => {
+      const target = event.target;
+      const file = target.files[0];
+      changeImg(window.URL.createObjectURL(file));
+    }
+
+
+
+
+
+
+  </script>
+</body>
+
+</html>
