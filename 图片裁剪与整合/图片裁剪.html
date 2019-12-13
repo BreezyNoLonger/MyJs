@@ -67,7 +67,9 @@
       width: 300px;
       height: 300px;
       overflow: hidden;
-      position: relative;
+      position: absolute;
+      top: 0;
+      right: 0;
     }
 
     #show {
@@ -195,31 +197,40 @@
             chooseBox.removeChild(tip)
           }
         }
-        imgBox.onmousemove = (event) => {
-          const id = event.target.getAttribute('id');
-          if (id === 'clipImg' || id === 'bgImg') {
-            const x = event.offsetX;
-            const y = event.offsetY;
-            // 当x<方块宽度一半时，方块维持宽度不变
-            // 当x<方块宽度一半>图片宽度时，方块维持宽度不变
-            // 当y<方块宽度一半时，方块维持宽度不变
-            // 当y+方块宽度一半>图片高度时，方块维持宽度不变
-            // 如果鼠标y坐标不在据图片顶部150内的位置，
-            // 则如果鼠标y坐标在据图片底部150内的位置，
-            const top = y > rectLength / 2 ? (y + rectLength / 2 < imgHeight ? y - rectLength / 2 : imgHeight - rectLength) : 0;
-            const left = x > rectLength / 2 ? (x + rectLength / 2 < imgWidth ? x - rectLength / 2 : imgWidth - rectLength) : 0;
+        imgBox.ondragstart = (e) => {
+          return false;
+        };
+        imgBox.onmousedown = () => {
+          imgBox.onmousemove = (event) => {
+            const id = event.target.getAttribute('id');
+            if (id === 'clipImg' || id === 'bgImg') {
+              const x = event.offsetX;
+              const y = event.offsetY;
+              // 当x<方块宽度一半时，方块维持宽度不变
+              // 当x<方块宽度一半>图片宽度时，方块维持宽度不变
+              // 当y<方块宽度一半时，方块维持宽度不变
+              // 当y+方块宽度一半>图片高度时，方块维持宽度不变
+              // 如果鼠标y坐标不在据图片顶部150内的位置，
+              // 则如果鼠标y坐标在据图片底部150内的位置，
+              const top = y > rectLength / 2 ? (y + rectLength / 2 < imgHeight ? y - rectLength / 2 : imgHeight - rectLength) : 0;
+              const left = x > rectLength / 2 ? (x + rectLength / 2 < imgWidth ? x - rectLength / 2 : imgWidth - rectLength) : 0;
 
-            clipImg.style.clipPath = `inset(
+              clipImg.style.clipPath = `inset(
               ${top}px 
               ${imgWidth - (left + rectLength)}px 
               ${imgHeight - (top + rectLength)}px 
               ${left}px)`;
-            showImg({
-              time,
-              sx: left,
-              sy: top
-            })
-          }
+              showImg({
+                time,
+                sx: left,
+                sy: top
+              })
+            };
+            imgBox.onmouseup = () => {
+              imgBox.onmousemove = null;
+            }
+          };
+
 
         }
       }
