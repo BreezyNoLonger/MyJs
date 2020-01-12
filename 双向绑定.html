@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+<input type="text" id="inputMsg"/>
+<div id="showMsg"></div>
+
+<script>
+const obj = {};
+const inputMsg = document.querySelector('#inputMsg');
+const showMsg = document.querySelector('#showMsg');
+
+Object.defineProperty(obj, 'msg', {
+  enumerable: true,
+  configurable: true,
+  get() {
+    return this.msg;
+  },
+  set(newValue) {
+    inputMsg.value = newValue;
+    showMsg.innerHTML = newValue;
+    console.log('set!');
+  }
+});
+inputMsg.oninput = () => {
+    obj.msg = inputMsg.value;
+}
+</script>
+</body>
+</html>
